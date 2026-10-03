@@ -1,0 +1,16 @@
+/hostdesk
+/dist/
+/.private/
+/state/
+/config.json
+/policy.json
+/broker.json
+/audit.jsonl
+/inventory*.json
+/snapshot*.json
+.env
+.env.*
+*.sqlite
+*.sqlite-*
+*.log
+/coverage.out

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Hostdesk · Service desk</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a id="skip-link" class="skip-link" href="#main" hidden>Skip to main content</a>
+  <div id="session-loading" class="session-screen" role="status">
+    <div class="wordmark">Hostdesk<span class="brand-dot" aria-hidden="true"></span></div>
+    <p>Checking your session…</p>
+    <div class="skeleton skeleton-line" aria-hidden="true"></div>
+  </div>
+
+  <section id="login-screen" class="session-screen" role="main" aria-labelledby="login-title" hidden>
+    <div class="login-card">
+      <div class="wordmark">Hostdesk<span class="brand-dot" aria-hidden="true"></span></div>
+      <p class="eyebrow">Your machine. In view.</p>
+      <h1 id="login-title">A clear view of<br>what is running.</h1>
+      <p class="muted">Sign in to inspect this host’s services, listeners, routes, and access policy.</p>
+      <form id="login-form">
+        <label for="owner-token">Owner token</label>
+        <input id="owner-token" name="token" type="password" autocomplete="off" spellcheck="false" required aria-describedby="token-help login-error">
+        <p id="token-help" class="field-help">Retrieve the owner token with <code>hostdesk token</code> on the installation host. It is never saved in this browser.</p>
+        <p id="login-error" class="error-text" role="alert" hidden></p>
+        <button id="login-button" class="button primary" type="submit">Sign in</button>
+      </form>
+      <button id="session-retry" class="button quiet" type="button">Check session again</button>
+    </div>
+  </section>
+
+  <div id="app" class="app-shell" hidden>
+    <aside class="sidebar" aria-label="Application navigation">
+      <a class="wordmark" href="#overview">Hostdesk<span class="brand-dot" aria-hidden="true"></span></a>
+      <p class="sidebar-caption">LOCAL SERVICE DESK</p>
+      <nav aria-label="Main">
+        <a href="#overview" data-view="overview" aria-current="page"><span class="nav-mark" aria-hidden="true">01</span>Overview</a>
+        <a href="#services" data-view="services"><span class="nav-mark" aria-hidden="true">02</span>Services</a>
+        <a href="#ports" data-view="ports"><span class="nav-mark" aria-hidden="true">03</span>Ports &amp; access</a>
+        <a href="#projects" data-view="projects"><span class="nav-mark" aria-hidden="true">04</span>Projects</a>
+        <a href="#audit" data-view="audit"><span class="nav-mark" aria-hidden="true">05</span>Audit</a>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="eyebrow">Signed in as</span>
+        <p id="actor" class="actor"></p>
+        <button id="logout-button" class="button quiet" type="button">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="host-context"><span class="context-dot" aria-hidden="true"></span><span id="host-name">Host inventory</span><span class="context-divider" aria-hidden="true">/</span><span class="muted">Live sources</span></div>
+        <div class="refresh-tools">
+          <span id="freshness" class="freshness">Waiting for inventory</span>
+          <label class="poll-toggle"><input id="auto-refresh" type="checkbox" checked> Auto-refresh</label>
+          <button id="refresh-button" class="button small" type="button">Refresh</button>
+        </div>
+      </header>
+
+      <main id="main" tabindex="-1">
+        <div id="global-message" class="notice" role="status" hidden></div>
+        <div id="broker-notice" class="notice warning" hidden>Privileged broker is unavailable. Inventory may be partial; system, container, and network controls depend on broker availability and its allowlist. User-service controls remain available where permitted.</div>
+        <div id="pending-policy" class="pending-banner" aria-labelledby="pending-title" hidden>
+          <div>
+            <p class="eyebrow">Unconfirmed access change</p>
+            <h2 id="pending-title">Keep your connection open.</h2>
+            <p id="pending-countdown" class="countdown" aria-live="off"></p>
+            <p class="field-help">The previous policy is restored automatically unless you confirm over this live connection. Check needed access before keeping the change.</p>
+          </div>
+          <div class="button-row">
+            <button id="rollback-policy" class="button" type="button">Roll back now</button>
+            <button id="confirm-policy" class="button primary" type="button">Keep this policy</button>
+          </div>
+          <p id="pending-error" class="error-text" role="alert" hidden></p>
+        </div>
+        <div id="snapshot-notice" hidden></div>
+
+        <section id="view-overview" class="view" aria-labelledby="overview-heading">
+          <div class="page-heading"><div><p class="eyebrow">The operating picture</p><h1 id="overview-heading">Overview</h1><p class="page-description">What is running, what is listening, and where access comes from.</p></div><span id="snapshot-time" class="meta"></span></div>
+          <div id="overview-content"></div>
+        </section>
+
+        <section id="view-services" class="view" aria-labelledby="services-heading" hidden>
+          <div class="page-heading"><div><p class="eyebrow">Runtime inventory</p><h1 id="services-heading">Services</h1><p class="page-description">System and user units, plus running and stopped containers.</p></div><span id="service-count" class="count-label" role="status"></span></div>
+          <div class="filter-bar">
+            <div class="search-field"><label for="service-search">Search services</label><input id="service-search" type="search" placeholder="Name, description, path, or port" autocomplete="off"></div>
+            <div><label for="service-manager">Manager</label><select id="service-manager"><option value="">All managers</option></select></div>
+            <div><label for="service-scope">Scope</label><select id="service-scope"><option value="">All scopes</option></select></div>
+            <div><label for="service-state">State</label><select id="service-state"><option value="">All states</option></select></div>
+            <button id="clear-service-filters" class="button quiet filter-reset" type="button">Clear filters</button>
+          </div>
+          <div id="services-content"></div>
+        </section>
+
+        <section id="view-ports" class="view" aria-labelledby="ports-heading" hidden>
+          <div class="page-heading"><div><p class="eyebrow">Listeners, routes &amp; policy</p><h1 id="ports-heading">Ports &amp; access</h1><p class="page-description">A bind address is evidence, not a claim of internet reachability.</p></div></div>
+          <div class="notice info">Hostdesk guards traffic addressed to this host through the firewall INPUT path. It does not cover Docker bridge-published ports forwarded through the FORWARD path. Host-network containers use INPUT. Other firewall rules and published proxies remain separate; a public route can provide another path to a service.</div>
+          <section class="section-block" aria-labelledby="listeners-heading">
+            <div class="section-heading"><h2 id="listeners-heading">Listening sockets</h2><span id="listener-count" class="count-label" role="status"></span></div>
+            <div class="filter-bar compact">
+              <div class="search-field"><label for="listener-search">Search listeners</label><input id="listener-search" type="search" placeholder="Address, port, process, or service" autocomplete="off"></div>
+              <div><label for="listener-exposure">Binding</label><select id="listener-exposure"><option value="">All bindings</option></select></div>
+            </div>
+            <div id="listeners-content"></div>
+          </section>
+          <section class="section-block" aria-labelledby="routes-heading">
+            <div class="section-heading"><h2 id="routes-heading">Published routes</h2><span class="meta">Discovered proxy configuration</span></div>
+            <div id="routes-content"></div>
+          </section>
+          <section class="section-block policy-section" aria-labelledby="policy-heading">
+            <div class="section-heading"><div><p class="eyebrow">Explicit allowlists</p><h2 id="policy-heading">Interface access policy</h2></div><button id="reload-network" class="button small" type="button">Reload policy</button></div>
+            <p class="muted">Listed interfaces deny new host-directed inbound TCP/UDP except the allowed ports below. This does not restrict forwarded container traffic. Established connections, loopback, and ICMP remain permitted. Unlisted interfaces stay under the host’s existing rules.</p>
+            <div id="network-notice"></div>
+            <div id="network-summary"></div>
+            <div id="policy-editor" hidden>
+              <p id="policy-help" class="field-help">Use exact interface names from this host. Enter individual ports separated by commas, from 1 to 65535; an empty list allows no new ports for that protocol. The broker validates names and protects management ports.</p>
+              <div id="interface-rows"></div>
+              <div class="policy-toolbar">
+                <button id="add-interface" class="button" type="button">Add interface</button>
+                <div class="button-row"><button id="discard-policy" class="button quiet" type="button" disabled>Discard edits</button><button id="preview-policy" class="button primary" type="button">Preview policy</button></div>
+              </div>
+              <p id="policy-draft-status" class="field-help" role="status"></p>
+              <p id="policy-error" class="error-text" role="alert" hidden></p>
+            </div>
+          </section>
+        </section>
+
+        <section id="view-projects" class="view" aria-labelledby="projects-heading" hidden>
+          <div class="page-heading"><div><p class="eyebrow">Code behind the processes</p><h1 id="projects-heading">Projects</h1><p class="page-description">Repositories and manifests discovered in configured roots and service working directories. Read-only; not a filesystem browser.</p></div><span id="project-count" class="count-label" role="status"></span></div>
+          <div class="filter-bar"><div class="search-field"><label for="project-search">Search projects</label><input id="project-search" type="search" placeholder="Project, path, or kind" autocomplete="off"></div></div>
+          <div id="projects-content"></div>
+        </section>
+
+        <section id="view-audit" class="view" aria-labelledby="audit-heading" hidden>
+          <div class="page-heading"><div><p class="eyebrow">Accountable changes</p><h1 id="audit-heading">Audit</h1><p class="page-description">Recent recorded actions and policy changes. “Not confirmed” includes accepted intents awaiting an outcome and unsuccessful operations; read the detail for the distinction.</p></div><button id="reload-audit" class="button small" type="button">Reload audit</button></div>
+          <div id="audit-notice"></div>
+          <div class="filter-bar"><div class="search-field"><label for="audit-search">Search audit</label><input id="audit-search" type="search" placeholder="Actor, operation, target, or detail" autocomplete="off"></div><div><label for="audit-result">Result</label><select id="audit-result"><option value="">All results</option><option value="success">Succeeded</option><option value="unconfirmed">Not confirmed</option></select></div></div>
+          <div id="audit-content"></div>
+        </section>
+      </main>
+      <footer class="page-footer"><span>Hostdesk · Observed state, explicit changes.</span><span>Inventory is a point-in-time view.</span></footer>
+    </div>
+  </div>
+
+  <dialog id="preview-dialog" aria-labelledby="preview-title" aria-describedby="preview-description">
+    <div class="dialog-heading"><p class="eyebrow">Review before applying</p><h2 id="preview-title">Change preview</h2></div>
+    <div id="preview-body"></div>
+    <p id="preview-description" class="muted">Nothing changes until you type the exact confirmation and choose Apply.</p>
+    <p id="preview-expiry" class="field-help"></p>
+    <label for="confirmation-input">Type this confirmation exactly</label>
+    <code id="confirmation-text" class="confirmation-text"></code>
+    <input id="confirmation-input" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" aria-describedby="confirmation-text preview-expiry preview-error">
+    <p id="preview-error" class="error-text" role="alert" hidden></p>
+    <div class="dialog-actions"><button id="cancel-preview" class="button" type="button" autofocus>Cancel</button><button id="apply-preview" class="button primary" type="button" disabled>Apply change</button></div>
+  </dialog>
+  <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
