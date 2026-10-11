@@ -1,0 +1,17 @@
+#!/bin/sh
+# Noninteractive verification entry point. Exits nonzero when any required check fails.
+# Runs offline when dependencies are already in the module cache (GOPROXY=off).
+set -eu
+cd "$(dirname "$0")/.."
+
+unformatted=$(gofmt -l cmd internal)
+if [ -n "$unformatted" ]; then
+  echo "gofmt required for:" >&2
+  echo "$unformatted" >&2
+  exit 1
+fi
+go vet ./...
+go test ./...
+sh -n install.sh
+CGO_ENABLED=0 go build -trimpath -o "${TMPDIR:-/tmp}/hostdesk-verify" ./cmd/hostdesk
+echo "verify: all checks passed"

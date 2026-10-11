@@ -1,0 +1,46 @@
+name: ALICE engineering task
+description: Submit one bounded task to the ALICE engineering queue. Work starts only after the owner approves the posted spec hash.
+title: "[alice] "
+labels: ["alice:queue"]
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: One bounded outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: allowed_paths
+    attributes:
+      label: Allowed paths
+      description: >-
+        One repository-relative path per line; a trailing slash means a directory. Protected paths
+        cannot be listed: .github/, scripts/verify, AGENTS.md, install.sh, Makefile, go.mod, go.sum, SECURITY.md.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: One observable requirement per line. Ask for tests where behavior changes.
+    validations:
+      required: true
+  - type: dropdown
+    id: autonomy_class
+    attributes:
+      label: Autonomy class
+      options:
+        - "B: ordinary feature or bug fix (PR, human review)"
+        - "A: allowlisted low-risk maintenance"
+        - "C: security, infrastructure, dependency, or sensitive logic (needs an approved plan)"
+        - "D: production or financial operation (outside worker authority)"
+    validations:
+      required: true
+  - type: input
+    id: budget
+    attributes:
+      label: Resource budget
+      value: "3 attempts, 60 minutes each"
+    validations:
+      required: true
