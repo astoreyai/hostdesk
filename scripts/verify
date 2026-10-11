@@ -15,5 +15,3 @@ go test ./...
 sh -n install.sh
 CGO_ENABLED=0 go build -trimpath -o "${TMPDIR:-/tmp}/hostdesk-verify" ./cmd/hostdesk
 echo "verify: all checks passed"
-
-# owner edit after takeover (commissioning: protected-path scenario)
